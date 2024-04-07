@@ -14,9 +14,11 @@ Le projet de base est dans notre [dépot GitHub](https://github.com/guteacher/lo
   
 ## Référence visuel pour l'implémentation
 1) Menu initial: Le joueur peut choisir entre héberger ou rejoindre un jeu.
+    ![](./assets/menu-initial.png)
 2) **Interface <\<host\>>**: Le joueur peut envoyer un message et voir la réponse attendue en morse, ainsi que la réponse envoyée au fur et à mesure que les caractères sont reçus.
-1) **Interface <\<client\>>**: Le joueur peut voir le message qu’il doit chiffrer. Il va envoyer les messages morse en appuyant les touches de clavier (par exemple, ARROW UP et ARROW
-DOWN, ou . et -).
+    ![](./assets/interface.png)
+3) **Interface <\<client\>>**: Le joueur peut voir le message qu’il doit chiffrer. Il va envoyer les messages morse en appuyant les touches de clavier (par exemple, ARROW UP et ARROW DOWN, ou . et -).
+    ![](./assets/interface2.png)
 
 ## Grille d’évaluation
 | Aspect | Description | Note |
