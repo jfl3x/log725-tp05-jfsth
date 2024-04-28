@@ -9,31 +9,37 @@ var port = 11234
 var host_text = ""
 var host_morse = ""
 var client_answer = []
-var game_over = false
+# JF : on le mets a "true" car nous ne voulons pas
+# utilise les son si jamais nous n'avons pas commencer une partie
+var game_over = true
 
 # ===== GAME LOOP =====
 func _physics_process(_delta):
-	
-	if (Input.is_action_just_pressed("ui_dot")): # fléche UP, point
-		# jouer un son à J1
-		pass
-	elif (Input.is_action_just_pressed("ui_dash")): # fléche DOWN, trait d'union
-		# jouer un son à J1
-		pass
+	if peer.get_connection_status() == 2 && !game_over:
+		if (Input.is_action_just_pressed("ui_dot")): # fléche UP, point
+			# jouer un son à J1
+			_play_dot_on_server.rpc()
+			pass
+		elif (Input.is_action_just_pressed("ui_dash")): # fléche DOWN, trait d'union
+			# jouer un son à J1
+			_play_dash_on_server.rpc()
+			pass
 	# Note: Vous pouvez jouer le même son avec différentes durées pour le point (plus courte) et pour le trait d'union (plus longue), ou jouer des sons distincts.
 
 # ===== EVÉNEMENTS INTERFACE =====
 func _on_host_pressed():
-	peer.create_server(port)
+	peer.create_server(port, 2)
 	multiplayer.multiplayer_peer = peer
+	
 	
 	# montrer l'interface host
 	$SendText.show()
 	$MainMenu.hide()
 	
 func _on_join_pressed():
-	peer.create_client(hostname, port)
+	var response = peer.create_client(hostname, port)
 	multiplayer.multiplayer_peer = peer
+	$Sound/Login.play()
 	
 	# montrer l'interface client
 	$ReceiveText.show()
@@ -48,8 +54,13 @@ func _on_btn_send_pressed():
 	# chiffrer la message comme réference
 	host_morse = get_morse_from_string(host_text)
 	$SendText/AnswerPreview.set_text(host_morse)
+	$Sound/Start.play()
 	
 	# envoyer la message à J2
+	var isFabio = false
+	if (host_text.to_upper() == "FABIO" or host_text.to_upper() == "FABIO PETRILLO" or host_text.to_upper() == "PETRILLO"):
+		isFabio = true
+	_show_text_on_client.rpc(host_text, isFabio)
 	pass
 
 # ===== LOGIQUE DU JEU =====
@@ -72,29 +83,59 @@ func get_morse_from_string(text: String) -> String:
 	
 func check_victory():
 	#  Joueur 1 vérifie si la séquence reçue jusqu'à ce point correspond au message initial.
+	if client_answer.size() == host_morse.length():
+		game_over = true
+		for i in client_answer.size():
+			if client_answer[i] != host_morse[i]:
+				_play_end_game_on_client.rpc(false)
+				return
+		_play_end_game_on_client.rpc(true)
 	pass
 
 # ===== MÉTHODES RPC =====
 @rpc("authority", "call_remote", "reliable")
-func _show_text_on_client(text):
-	# cette méthode sera appelé par J1
+func _show_text_on_client(text, isFabio):
 	# envoyer et montrer le texte à J2
-	pass
+	# et preparer client
+	game_over = false
+	if isFabio:
+		$FabioProfilePicture.show()
+		$LabelFabio.show()
+	else:
+		$FabioProfilePicture.hide()
+		$LabelFabio.hide()
+	$ReceiveText/Label.set_text("Message reçu:")
+	$ReceiveText/TextDisplay.set_text(text)
 	
 @rpc("any_peer", "call_remote", "reliable")
 func _play_dot_on_server():
 	# cette méthode sera appelé par J2
 	if (!game_over):
 		# jouer le beep à J1
-		pass
+		$Sound/Dot.play()
+		client_answer.append(".")
+		check_victory()
 	
 @rpc("any_peer", "call_remote", "reliable")
 func _play_dash_on_server():
 	# cette méthode sera appelé par J2
 	if (!game_over):
 		# jouer le beep à J1
-		pass
+		$Sound/Dash.play()
+		client_answer.append("-")
+		check_victory()
 	
+	
+@rpc("authority", "call_remote", "reliable")
+func _play_end_game_on_client(isWin):
+	# cette méthode sera appelé par J2
+	$ReceiveText/TextDisplay.set_text("")
+	if isWin:
+		$ReceiveText/Label.set_text("Congratulation :)")
+		$Sound/Win.play()
+	else:
+		$ReceiveText/Label.set_text("Game Over :(")
+		$Sound/GameOver.play()	
 
 
 

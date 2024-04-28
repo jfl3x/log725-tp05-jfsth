@@ -1,0 +1,6 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://cesyljssbsvch"]
+
+[ext_resource type="Shader" path="res://confetti_particles.gdshader" id="1"]
+
+[resource]
+shader = ExtResource("1")
